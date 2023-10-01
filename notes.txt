@@ -1,0 +1,34 @@
+
+1.Setup Flask Project
+    csv_importer/
+        ├── app/
+        │   ├── __init__.py
+        │   ├── routes.py
+        │   └── templates/
+        │       ├── base.html
+        │       └── upload.html
+        ├── venv/
+        ├── config.py
+        ├── run.py
+        └── README.md
+
+2.Google Sheets API
+    Set up Google Cloud project.
+    Enable Google Sheets API.
+    Generate OAuth 2.0 credentials.
+3.Backend
+    Implement file upload route.
+    Parse uploaded CSV files.
+    Allow column selection and data filtering.
+    Integrate with Google Sheets API.
+4.Frontend
+    Create a user-friendly interface.
+    Implement drag-and-drop file uploads.
+    Create UI for column selection and filtering.
+
+Production Checklist
+    Optimize for large CSV files
+    Test with different file sizes
+    Ensure column selection and filtering work.
+    Documentation
+    Video Recording
