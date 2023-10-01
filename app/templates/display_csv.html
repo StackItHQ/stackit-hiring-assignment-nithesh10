@@ -105,6 +105,12 @@
                 {% endfor %}
             </tbody>
         </table>
+        {% if df.empty %}
+        <div class="upload-section">
+            <h1>Upload CSV</h1>
+            <iframe src="/upload" frameborder="0" width="100%" height="300px"></iframe>
+        </div>
+        {% endif %}
     </div>
 
     <script>

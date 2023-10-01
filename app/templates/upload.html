@@ -3,12 +3,86 @@
   <head>
     <meta charset="utf-8">
     <title>CSV Importer</title>
+    <style>
+      /* Add CSS for styling */
+      body {
+        background-image: url('static/home.png');
+        background-size: cover;
+        text-align: center;
+        padding: 50px;
+      }
+      form {
+        display: inline-block;
+        background-color: #fff;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+      }
+      #loadingIcon {
+        display: none;
+      }
+    </style>
   </head>
   <body>
     <h1>CSV Importer</h1>
-    <form method="POST" enctype="multipart/form-data" action="/upload">
-      <input type="file" name="file">
+    <form method="POST" enctype="multipart/form-data" action="/upload" id="uploadForm">
+      <input type="file" name="file" id="fileInput" style="display: none;">
+      <label for="fileInput">Click here to select a file</label>
+      <p>or</p>
+      <div id="dropArea" style="border: 2px dashed #ccc; padding: 20px; cursor: pointer;">
+        Drag and drop a file here
+      </div>
       <input type="submit" value="Upload">
+      <div id="loadingIcon">
+        <!-- You can use a loading spinner or GIF here -->
+        <img src="/static/loading.gif" alt="Loading..." width="40" height="40">
+      </div>
     </form>
+
+    <script>
+      // JavaScript for handling file input via drag-and-drop
+      const dropArea = document.getElementById('dropArea');
+      const fileInput = document.getElementById('fileInput');
+      const uploadForm = document.getElementById('uploadForm');
+      const loadingIcon = document.getElementById('loadingIcon');
+
+      dropArea.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropArea.style.border = '2px dashed #333';
+      });
+
+      dropArea.addEventListener('dragleave', () => {
+        dropArea.style.border = '2px dashed #ccc';
+      });
+
+      dropArea.addEventListener('drop', (e) => {
+        e.preventDefault();
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+          fileInput.files = files;
+          showLoadingIcon();
+          uploadForm.submit(); // Submit the form on drop
+        }
+      });
+
+      // JavaScript for opening the file manager when clicking
+      dropArea.addEventListener('click', () => {
+        fileInput.click();
+      });
+
+      fileInput.addEventListener('change', () => {
+        if (fileInput.files.length > 0) {
+          showLoadingIcon();
+          uploadForm.submit(); // Submit the form when a file is selected
+        }
+      });
+
+      // Function to show the loading icon and hide the form elements
+      function showLoadingIcon() {
+        dropArea.style.display = 'none';
+        fileInput.style.display = 'none';
+        loadingIcon.style.display = 'block';
+      }
+    </script>
   </body>
 </html>
