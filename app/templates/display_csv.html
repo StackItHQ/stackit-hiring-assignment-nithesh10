@@ -43,11 +43,29 @@
             color: white;
             padding: 5px 10px;
             margin-right: 10px;
-            margin-bottom: 10px;
+            margin-top: 5px;
+            margin-bottom: 5px;
             display: flex;
             align-items: center;
         }
         .selected-column button {
+            background-color: transparent;
+            border: none;
+            color: white;
+            margin-left: 5px;
+            cursor: pointer;
+        }
+        .applied-filter {
+            background-color: #333;
+            color: white;
+            padding: 5px 10px;
+            margin-top: 5px;
+            margin-right: 10px;
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+        }
+        .applied-filter button {
             background-color: transparent;
             border: none;
             color: white;
@@ -80,10 +98,32 @@
             {% endfor %}
         </select>
         <button id="add-column-button">Add Column</button>
-        <button id="add-remove-all-columns-button">Add/Remove All Columns</button>
+        <button id="add-remove-all-columns-button">Add All Columns</button>
         <button id="import-to-google-sheets-button">Import to Google Sheets</button>
         <div class="selected-columns" id="selected-columns-list"></div>
+        <h1>Filter Column</h1>
+        <select id="filter-columns">
+            {% for column in columns %}
+                <option value="{{ column }}">{{ column }}</option>
+            {% endfor %}
+        </select>
+        <select id="filter-type">
+            <option value="exact">Exactly is</option>
+            <option value="not_exact">Exactly is not</option>
+            <option value="start_with">Starts with</option>
+            <option value="greater_than">Greater than</option>
+            <option value="less_than">Less than</option>
+            <option value="greater_than_equals">Greater than or equals</option>
+            <option value="less_than_equals">Less than or equals</option>
+        </select>
+        <input type="text" id="filter-value" placeholder="Enter filter value">
+        <button id="add-filter-button">Add Filter</button>
+        <div class="selected-columns" id="applied-filter">
+            <!-- Filters will be displayed here -->
+        </div>
+        <button id="apply-filter-button">Apply Filters</button>
     </div>
+
     <div class="right-section">
         <h1>Data Frame</h1>
         <!-- Display the DataFrame -->
@@ -114,7 +154,16 @@
     </div>
 
     <script>
+        const removeAllFiltersButton = document.getElementById("remove-all-filters-button");
+        const filterTypeSelect = document.getElementById("filter-type");
+        const filterValueInput = document.getElementById("filter-value");
+        const addFilterButton = document.getElementById("add-filter-button");
+        const applyFilterButton = document.getElementById("apply-filter-button");
+        const filteredDataDiv = document.getElementById("filtered-data");
+        const appliedFiltersDiv = document.getElementById("applied-filter");
+
         const availableColumns = document.getElementById("available-columns");
+        const filterColumns = document.getElementById("filter-columns")
         const addColumnButton = document.getElementById("add-column-button");
         const addRemoveAllColumnsButton = document.getElementById("add-remove-all-columns-button");
         const importToGoogleSheetsButton = document.getElementById("import-to-google-sheets-button");
@@ -122,6 +171,93 @@
         const csvTable = document.getElementById("csv-table");
         const headerRow = document.getElementById("header-row");
         let allColumnsAdded = false;
+        document.addEventListener("DOMContentLoaded", function() {
+        const addRemoveAllColumnsButton = document.getElementById("add-remove-all-columns-button");
+        addRemoveAllColumnsButton.click(); // Simulate a click on the button
+    });
+
+    addFilterButton.addEventListener("click", () => {
+    const filterType = filterTypeSelect.value;
+    const filterValue = filterValueInput.value;
+    const selectedColumn = filterColumns.options[filterColumns.selectedIndex].value;
+    const filename = "{{ filename }}";
+    
+    const appliedFilter = document.createElement("div");
+    appliedFilter.classList.add("applied-filter");
+
+    const filterText = document.createElement("span");
+    filterText.textContent = `${selectedColumn} ${filterType} ${filterValue}`;
+    appliedFilter.appendChild(filterText);
+    
+    // Create a button element with an "X" mark to remove the filter
+    const removeButton = document.createElement("button");
+    removeButton.textContent = "X";
+    removeButton.classList.add("remove-filter");
+    
+    // Add a click event listener to the remove button
+    removeButton.addEventListener("click", () => {
+        appliedFiltersDiv.removeChild(appliedFilter);
+    });
+    
+    
+    appliedFilter.appendChild(removeButton);
+    
+    appliedFiltersDiv.appendChild(appliedFilter);
+});
+    applyFilterButton.addEventListener("click", () => {
+        const appliedFilterElements = appliedFiltersDiv.querySelectorAll(".applied-filter");
+        const appliedFilters = Array.from(appliedFilterElements, (element) => {
+            return element.querySelector("span").textContent;
+        });
+
+        const filename = "{{ filename }}";
+        fetch("/apply_filters/", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+            appliedFilters: appliedFilters,
+            filename: filename,
+        }),
+    })
+    .then((response) => response.json())
+    .then((data) => {
+        const filteredData = JSON.parse(data.filtered_data);
+
+        // Replace the existing df variable with the filtered data
+        df = filteredData;
+        console.log("df updated:", df);
+        updateTableWithFilteredData();
+    });
+});
+
+function updateTableWithFilteredData() {
+    const tableBody = csvTable.querySelector("tbody");
+    tableBody.innerHTML = "";
+
+    
+    const numRows = Object.keys(df[Object.keys(df)[0]]).length;
+    const numCols = Object.keys(df).length;
+
+    // Iterate over rows
+    for (let i = 0; i < numRows; i++) {
+        const row = document.createElement("tr");
+
+        // Iterate over columns for each row
+        for (let j = 0; j < numCols; j++) {
+            const columnName = Object.keys(df)[j];
+            const cell = document.createElement("td");
+            cell.textContent = df[columnName][i];
+            row.appendChild(cell);
+        }
+
+        tableBody.appendChild(row);
+    }
+}
+
+
+
 
         addColumnButton.addEventListener("click", () => {
             const selectedOption = availableColumns.options[availableColumns.selectedIndex];
@@ -209,7 +345,7 @@
                         removeButton.addEventListener("click", () => {
                             selectedColumnsList.removeChild(selectedColumn);
 
-                            // Hide selected column in the table
+                          
                             th.style.display = "none";
                             for (const td of csvTable.querySelectorAll(`tbody td[data-column="${columnName}"]`)) {
                                 td.style.display = "none";
@@ -223,27 +359,29 @@
         });
 
         importToGoogleSheetsButton.addEventListener("click", () => {
-            const selectedColumns = Array.from(selectedColumnsList.querySelectorAll(".selected-column"), selectedColumn => {
-                return selectedColumn.getAttribute("data-column");
-            });
+    const selectedColumns = Array.from(selectedColumnsList.querySelectorAll(".selected-column"), selectedColumn => {
+        return selectedColumn.getAttribute("data-column");
+    });
 
-            // Create a form for the POST request
-            const filename = "{{ filename }}";
-            const form = document.createElement("form");
-            form.method = "post";
-            form.action = `/display_csv/${filename}`;
+    // Create a form for the POST request
+    const filename = "{{ filename }}";
+    const form = document.createElement("form");
+    form.method = "post";
+    form.action = `/display_csv/${filename}`;
 
-            for (const column of selectedColumns) {
-                const input = document.createElement("input");
-                input.type = "hidden";
-                input.name = "selected_columns";
-                input.value = column;
-                form.appendChild(input);
-            }
+    for (const column of selectedColumns) {
+        const input = document.createElement("input");
+        input.type = "hidden";
+        input.name = "selected_columns";
+        input.value = column;
+        form.appendChild(input);
+    }
 
-            document.body.appendChild(form);
-            form.submit();
-        });
+    document.body.appendChild(form);
+    form.target = "_blank";
+    form.submit();
+});
+
     </script>
 </body>
 </html>

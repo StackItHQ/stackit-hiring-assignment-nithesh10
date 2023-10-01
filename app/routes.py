@@ -1,4 +1,4 @@
-from flask import render_template, request, redirect, url_for, flash
+from flask import jsonify, render_template, request, redirect, url_for, flash
 import pandas as pd
 from werkzeug.utils import secure_filename
 import os
@@ -42,12 +42,55 @@ def display_csv(filename_without_extension):
         selected_columns = request.form.getlist('selected_columns')
         # Pass the selected columns to the import_csv function
         result = gsheets.import_csv(filename_without_extension, filepath, selected_columns)
-        print(result)
-        return redirect(url_for('index'))
+        return redirect((result))
     df = pd.read_csv(filepath)
     columns = df.columns.tolist()
     # Render the template to display the DataFrame
     return render_template('display_csv.html', df=df, columns=columns,filename=filename_without_extension)
+
+@app.route('/apply_filters/', methods=['POST'])
+def apply_filters():
+    try:
+        filter_data = request.get_json()
+        applied_filters = filter_data.get("appliedFilters")
+        file_name = filter_data.get("filename")
+        filepath = os.path.join(app.config['UPLOAD_FOLDER'], (file_name + ".csv"))
+        df = pd.read_csv(filepath)
+
+        for applied_filter in applied_filters:
+            parts = applied_filter.split()
+            column = parts[0]
+            filter_type = parts[1]
+            value = ' '.join(parts[2:])
+            print(column,filter_type,value)
+            if filter_type == "exact":
+                df = df[df[column] == value]
+                
+            elif filter_type == "not_exact":
+                df = df[df[column] != value]
+                
+            elif filter_type == "start_with":
+                df = df[df[column].str.startswith(value)]
+
+            elif filter_type == "greater_than":
+
+                df = df[df[column] > int(value)]
+            
+            elif filter_type == "less_than":
+                df = df[df[column] < int(value)]
+                
+            elif filter_type == "greater_than_equals":
+                df = df[df[column] >= int(value)]
+                
+            elif filter_type == "less_than_equals":
+                df = df[df[column] <= int(value)]
+        
+        df=df.reset_index(drop=True)
+        print(df)
+        return jsonify({"filtered_data": df.to_json()})
+    except Exception as e:
+        return jsonify({"error": str(e)})
+
 
 if __name__ == '__main__':
     app.run()

@@ -28,7 +28,7 @@ class gsheets_api:
     
     def generate_shareable_link(self):
         
-        self.spreadsheet.share('', perm_type='anyone', role='reader')
+        self.spreadsheet.share('', perm_type='anyone', role='writer')
         spreadsheet_link = self.spreadsheet.url
         return spreadsheet_link
     
@@ -37,6 +37,7 @@ class gsheets_api:
         return f"Created a new sheet with the title: {sheet_title}"
     
     def import_csv(self, spreadsheet_title, file_path, selected_columns):
+        self.create_new_google_sheet(spreadsheet_title)
         # Get the first worksheet (you can adjust the index if needed)
         worksheet = self.spreadsheet.get_worksheet(0)
 

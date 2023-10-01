@@ -10,11 +10,17 @@
         background-size: cover;
         text-align: center;
         padding: 50px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+        margin: 0;
       }
       form {
         display: inline-block;
         background-color: #fff;
-        padding: 20px;
+        padding: 50px;
         border-radius: 10px;
         box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
       }
@@ -34,7 +40,6 @@
       </div>
       <input type="submit" value="Upload">
       <div id="loadingIcon">
-        <!-- You can use a loading spinner or GIF here -->
         <img src="/static/loading.gif" alt="Loading..." width="40" height="40">
       </div>
     </form>
