@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Display CSV Data</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: row;
+            align-items: flex-start;
+            background-color: #f2f2f2;
+            margin: 0;
+        }
+        .left-section {
+            flex: 1;
+            padding: 20px;
+            background-color: #fff;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .right-section {
+            flex: 2;
+            padding: 20px;
+            background-color: #fff;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        select {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 20px;
+        }
+        .selected-columns {
+            display: flex;
+            flex-wrap: wrap;
+        }
+        .selected-column {
+            background-color: #333;
+            color: white;
+            padding: 5px 10px;
+            margin-right: 10px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+        }
+        .selected-column button {
+            background-color: transparent;
+            border: none;
+            color: white;
+            margin-left: 5px;
+            cursor: pointer;
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+        th, td {
+            padding: 10px;
+            text-align: center;
+        }
+        th {
+            background-color: #333;
+            color: white;
+        }
+        td {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+    <div class="left-section">
+        <h1>Column Names</h1>
+        <select id="available-columns">
+            {% for column in columns %}
+                <option value="{{ column }}">{{ column }}</option>
+            {% endfor %}
+        </select>
+        <button id="add-column-button">Add Column</button>
+        <button id="add-remove-all-columns-button">Add/Remove All Columns</button>
+        <button id="import-to-google-sheets-button">Import to Google Sheets</button>
+        <div class="selected-columns" id="selected-columns-list"></div>
+    </div>
+    <div class="right-section">
+        <h1>Data Frame</h1>
+        <!-- Display the DataFrame -->
+        <table id="csv-table">
+            <thead>
+                <tr id="header-row">
+                    {% for column in columns %}
+                        <th style="display: none;" data-column="{{ column }}">{{ column }}</th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for index, row in df.iterrows() %}
+                    <tr>
+                        {% for column in columns %}
+                            <td style="display: none;" data-column="{{ column }}">{{ row[column] }}</td>
+                        {% endfor %}
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        const availableColumns = document.getElementById("available-columns");
+        const addColumnButton = document.getElementById("add-column-button");
+        const addRemoveAllColumnsButton = document.getElementById("add-remove-all-columns-button");
+        const importToGoogleSheetsButton = document.getElementById("import-to-google-sheets-button");
+        const selectedColumnsList = document.getElementById("selected-columns-list");
+        const csvTable = document.getElementById("csv-table");
+        const headerRow = document.getElementById("header-row");
+        let allColumnsAdded = false;
+
+        addColumnButton.addEventListener("click", () => {
+            const selectedOption = availableColumns.options[availableColumns.selectedIndex];
+            const columnName = selectedOption.value;
+
+            if (columnName) {
+                // Check if the column is already added
+                const existingColumn = document.querySelector(`.selected-column[data-column="${columnName}"]`);
+                if (!existingColumn) {
+                    // Create a new selected column element
+                    const selectedColumn = document.createElement("div");
+                    selectedColumn.classList.add("selected-column");
+                    selectedColumn.setAttribute("data-column", columnName);
+                    selectedColumn.innerHTML = `
+                        ${columnName}
+                        <button class="remove-column">X</button>
+                    `;
+                    selectedColumnsList.appendChild(selectedColumn);
+
+                    // Show selected column in the table
+                    const th = headerRow.querySelector(`th[data-column="${columnName}"]`);
+                    th.style.display = "table-cell";
+
+                    for (const td of csvTable.querySelectorAll(`tbody td[data-column="${columnName}"]`)) {
+                        td.style.display = "table-cell";
+                    }
+
+                    // Add remove event listener to the button
+                    const removeButton = selectedColumn.querySelector(".remove-column");
+                    removeButton.addEventListener("click", () => {
+                        selectedColumnsList.removeChild(selectedColumn);
+
+                        // Hide selected column in the table
+                        th.style.display = "none";
+                        for (const td of csvTable.querySelectorAll(`tbody td[data-column="${columnName}"]`)) {
+                            td.style.display = "none";
+                        }
+                    });
+                }
+            }
+        });
+
+        addRemoveAllColumnsButton.addEventListener("click", () => {
+            if (allColumnsAdded) {
+                // Remove all selected columns
+                const selectedColumns = document.querySelectorAll(".selected-column");
+                for (const selectedColumn of selectedColumns) {
+                    const columnName = selectedColumn.getAttribute("data-column");
+                    const th = headerRow.querySelector(`th[data-column="${columnName}"]`);
+                    th.style.display = "none";
+
+                    for (const td of csvTable.querySelectorAll(`tbody td[data-column="${columnName}"]`)) {
+                        td.style.display = "none";
+                    }
+
+                    selectedColumnsList.removeChild(selectedColumn);
+                }
+                allColumnsAdded = false;
+                addRemoveAllColumnsButton.textContent = "Add All Columns";
+            } else {
+                // Add all columns to the selected list
+                for (const column of availableColumns.options) {
+                    const columnName = column.value;
+                    const existingColumn = document.querySelector(`.selected-column[data-column="${columnName}"]`);
+                    if (!existingColumn) {
+                        const selectedColumn = document.createElement("div");
+                        selectedColumn.classList.add("selected-column");
+                        selectedColumn.setAttribute("data-column", columnName);
+                        selectedColumn.innerHTML = `
+                            ${columnName}
+                            <button class="remove-column">X</button>
+                        `;
+                        selectedColumnsList.appendChild(selectedColumn);
+
+                        // Show selected column in the table
+                        const th = headerRow.querySelector(`th[data-column="${columnName}"]`);
+                        th.style.display = "table-cell";
+
+                        for (const td of csvTable.querySelectorAll(`tbody td[data-column="${columnName}"]`)) {
+                            td.style.display = "table-cell";
+                        }
+
+                        // Add remove event listener to the button
+                        const removeButton = selectedColumn.querySelector(".remove-column");
+                        removeButton.addEventListener("click", () => {
+                            selectedColumnsList.removeChild(selectedColumn);
+
+                            // Hide selected column in the table
+                            th.style.display = "none";
+                            for (const td of csvTable.querySelectorAll(`tbody td[data-column="${columnName}"]`)) {
+                                td.style.display = "none";
+                            }
+                        });
+                    }
+                }
+                allColumnsAdded = true;
+                addRemoveAllColumnsButton.textContent = "Remove All Columns";
+            }
+        });
+
+        importToGoogleSheetsButton.addEventListener("click", () => {
+            const selectedColumns = Array.from(selectedColumnsList.querySelectorAll(".selected-column"), selectedColumn => {
+                return selectedColumn.getAttribute("data-column");
+            });
+
+            // Create a form for the POST request
+            const filename = "{{ filename }}";
+            const form = document.createElement("form");
+            form.method = "post";
+            form.action = `/display_csv/${filename}`;
+
+            for (const column of selectedColumns) {
+                const input = document.createElement("input");
+                input.type = "hidden";
+                input.name = "selected_columns";
+                input.value = column;
+                form.appendChild(input);
+            }
+
+            document.body.appendChild(form);
+            form.submit();
+        });
+    </script>
+</body>
+</html>
