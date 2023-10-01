@@ -41,6 +41,7 @@ def display_csv(filename_without_extension):
     if request.method == 'POST':
         selected_columns = request.form.getlist('selected_columns')
         # Pass the selected columns to the import_csv function
+        filepath=os.path.join(app.config['FILTER_FOLDER'], (filename_without_extension+".csv"))
         result = gsheets.import_csv(filename_without_extension, filepath, selected_columns)
         return redirect((result))
     df = pd.read_csv(filepath)
@@ -54,38 +55,43 @@ def apply_filters():
         filter_data = request.get_json()
         applied_filters = filter_data.get("appliedFilters")
         file_name = filter_data.get("filename")
+        selected_columns=filter_data.get("selectedcolumns")
+        print(selected_columns)
         filepath = os.path.join(app.config['UPLOAD_FOLDER'], (file_name + ".csv"))
         df = pd.read_csv(filepath)
+        df = df[selected_columns]
 
         for applied_filter in applied_filters:
             parts = applied_filter.split()
             column = parts[0]
             filter_type = parts[1]
-            value = ' '.join(parts[2:])
+            value = str(' '.join(parts[2:]))
             print(column,filter_type,value)
             if filter_type == "exact":
-                df = df[df[column] == value]
+                df = df[df[column].astype(str) == value]
                 
             elif filter_type == "not_exact":
-                df = df[df[column] != value]
+                df = df[df[column].astype(str) != value]
                 
             elif filter_type == "start_with":
-                df = df[df[column].str.startswith(value)]
+                df = df[df[column].astype(str).str.startswith(str(value))]
 
             elif filter_type == "greater_than":
 
-                df = df[df[column] > int(value)]
+                df = df[df[column] > float(value)]
             
             elif filter_type == "less_than":
-                df = df[df[column] < int(value)]
+                df = df[df[column] < float(value)]
                 
             elif filter_type == "greater_than_equals":
-                df = df[df[column] >= int(value)]
+                df = df[df[column] >= float(value)]
                 
             elif filter_type == "less_than_equals":
-                df = df[df[column] <= int(value)]
+                df = df[df[column] <= float(value)]
         
         df=df.reset_index(drop=True)
+        filepath = os.path.join(app.config['FILTER_FOLDER'], (file_name + ".csv"))
+        df.to_csv(filepath)
         print(df)
         return jsonify({"filtered_data": df.to_json()})
     except Exception as e:

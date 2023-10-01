@@ -197,19 +197,23 @@
     // Add a click event listener to the remove button
     removeButton.addEventListener("click", () => {
         appliedFiltersDiv.removeChild(appliedFilter);
+        applyFilterButton.click();
     });
     
     
     appliedFilter.appendChild(removeButton);
     
     appliedFiltersDiv.appendChild(appliedFilter);
+    
 });
     applyFilterButton.addEventListener("click", () => {
         const appliedFilterElements = appliedFiltersDiv.querySelectorAll(".applied-filter");
         const appliedFilters = Array.from(appliedFilterElements, (element) => {
             return element.querySelector("span").textContent;
         });
-
+        const selectedColumns = Array.from(selectedColumnsList.querySelectorAll(".selected-column"), selectedColumn => {
+        return selectedColumn.getAttribute("data-column");
+    });
         const filename = "{{ filename }}";
         fetch("/apply_filters/", {
         method: "POST",
@@ -219,6 +223,7 @@
         body: JSON.stringify({
             appliedFilters: appliedFilters,
             filename: filename,
+            selectedcolumns:selectedColumns,
         }),
     })
     .then((response) => response.json())
@@ -295,9 +300,11 @@ function updateTableWithFilteredData() {
                         for (const td of csvTable.querySelectorAll(`tbody td[data-column="${columnName}"]`)) {
                             td.style.display = "none";
                         }
+                        applyFilterButton.click();
                     });
                 }
             }
+            applyFilterButton.click();
         });
 
         addRemoveAllColumnsButton.addEventListener("click", () => {
@@ -315,6 +322,8 @@ function updateTableWithFilteredData() {
 
                     selectedColumnsList.removeChild(selectedColumn);
                 }
+                const tableBody = csvTable.querySelector("tbody");
+                tableBody.innerHTML = "";
                 allColumnsAdded = false;
                 addRemoveAllColumnsButton.textContent = "Add All Columns";
             } else {
@@ -350,12 +359,14 @@ function updateTableWithFilteredData() {
                             for (const td of csvTable.querySelectorAll(`tbody td[data-column="${columnName}"]`)) {
                                 td.style.display = "none";
                             }
+                            applyFilterButton.click();
                         });
                     }
                 }
                 allColumnsAdded = true;
                 addRemoveAllColumnsButton.textContent = "Remove All Columns";
             }
+            applyFilterButton.click();
         });
 
         importToGoogleSheetsButton.addEventListener("click", () => {
