@@ -14,6 +14,50 @@ gsheets = gsheets_api()
 def index():
     return render_template('upload.html')
 
+@app.route('/workbook-sheet-route', methods=['POST'])
+def workbook_sheet_route():
+    #try:
+        data = request.json
+        workbookName = data.get('workbookName')
+        workbookOption = data.get('workbookOption')
+        sheetName = data.get('sheetName')
+        sheetOption = data.get('sheetOption')
+        filename=data.get('filename')
+        selected_columns=data.get('selectedColumns')
+        
+       
+        if workbookOption == 'create-new':
+            gsheets.create_new_google_sheet(workbookName)
+        elif workbookOption == 'open-existing':
+            gsheets.open_spreadsheet(workbookName)
+        
+        if sheetOption == 'create-new':
+            gsheets.create_new_worksheet(sheetName)
+        elif sheetOption == 'use-existing':
+            gsheets.open_worksheet(sheetName)
+        filepath=os.path.join(app.config['FILTER_FOLDER'], (filename+".csv"))
+        result = gsheets.import_csv(filename, filepath, selected_columns)
+        print(result)
+        response = redirect((result))
+        return response
+
+@app.route('/grant_email_access', methods=['POST'])
+def grant_email_access():
+    data = request.get_json()
+    email = data.get('email')
+    access_level = data.get('accessLevel')
+    gsheets.give_email_access(email,access_level)
+    return jsonify({'message': f'Access granted to {email} with {access_level} level'}), 200
+
+
+@app.route('/generate_sharable_link', methods=['POST'])
+def generate_sharable_link():
+    access_options = request.json.get('access_options')
+    
+    spreadsheet_link=gsheets.generate_shareable_link_by_role(access_options)
+    response = redirect((spreadsheet_link))
+    return response
+
 @app.route('/upload', methods=['POST'])
 def upload_file():
     if 'file' not in request.files:
@@ -31,7 +75,7 @@ def upload_file():
         
         filename_without_extension=str(os.path.splitext(filename)[0])
         print("Filename is ",filename_without_extension)
-        gsheets.create_new_google_sheet(filename_without_extension)
+        
         return redirect(url_for('display_csv', filename_without_extension=filename_without_extension))
 
 
@@ -42,6 +86,7 @@ def display_csv(filename_without_extension):
         selected_columns = request.form.getlist('selected_columns')
         # Pass the selected columns to the import_csv function
         filepath=os.path.join(app.config['FILTER_FOLDER'], (filename_without_extension+".csv"))
+        gsheets.initiate(filename_without_extension)
         result = gsheets.import_csv(filename_without_extension, filepath, selected_columns)
         return redirect((result))
     df = pd.read_csv(filepath)

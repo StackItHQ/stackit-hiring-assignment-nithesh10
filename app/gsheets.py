@@ -8,8 +8,12 @@ from app import app
 
 class gsheets_api:
     def __init__(self) -> None:
+        self.init=1
         self.authenticate()
-
+    def initiate(self,name):
+        if(self.init==1):
+            self.create_new_google_sheet(name)
+        self.init=0
     def authenticate(self):
         # Authenticate with Google Sheets API using credentials
         scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
@@ -20,12 +24,35 @@ class gsheets_api:
     
     def create_new_google_sheet(self, sheet_title):
         self.spreadsheet=self.gc.create(sheet_title)
-        worksheet = self.spreadsheet.get_worksheet(0)
+        self.worksheet = self.spreadsheet.get_worksheet(0)
+        print("created new sheet")
+        self.init=0
+    def open_worksheet(self,title):
+        self.worksheet=self.spreadsheet.worksheet(title)
 
     def open_spreadsheet(self,title):
         self.spreadsheet = self.gc.open(title)
-        return self.spreadsheet
-    
+    def give_email_access(self, email_id, role):
+        
+        if(role=="read"):
+            role="reader"
+        if(role=="comment"):
+            role="commenter"
+        if(role=="write"):
+            role="writer"
+        self.spreadsheet.share(email_id, perm_type='user', role=role)
+        spreadsheet_link = self.spreadsheet.url
+        return spreadsheet_link
+    def generate_shareable_link_by_role(self,role):
+        if(role=="view"):
+            role="reader"
+        if(role=="edit"):
+            role="writer"
+        if(role=="comment"):
+            role="commenter"
+        self.spreadsheet.share('', perm_type='anyone', role=role)
+        spreadsheet_link = self.spreadsheet.url
+        return spreadsheet_link
     def generate_shareable_link(self):
         
         self.spreadsheet.share('', perm_type='anyone', role='writer')
@@ -34,13 +61,14 @@ class gsheets_api:
     
     def create_new_worksheet(self,sheet_title):
         self.spreadsheet.add_worksheet(title=sheet_title, rows="100", cols="20")
-        return f"Created a new sheet with the title: {sheet_title}"
+        self.open_worksheet(sheet_title)
+        print(f"Created a new sheet with the title: {sheet_title}")
     
     def import_csv(self, spreadsheet_title, file_path, selected_columns):
-        self.create_new_google_sheet(spreadsheet_title)
+        
         # Get the first worksheet (you can adjust the index if needed)
-        worksheet = self.spreadsheet.get_worksheet(0)
-
+        #worksheet = self.spreadsheet.get_worksheet(0)
+        worksheet=self.worksheet
         # Read and process the CSV file
         with open(file_path, 'r') as file:
             lines = file.readlines()
@@ -64,16 +92,3 @@ class gsheets_api:
         worksheet.append_rows(data_rows)
 
         return self.generate_shareable_link()
-
-
-    def select_columns(self, spreadsheet_title, selected_columns):
-        spreadsheet = self.open_spreadsheet(spreadsheet_title)
-        worksheet = spreadsheet.get_worksheet(0) 
-
-        # Get all data from the worksheet
-        all_data = worksheet.get_all_values()
-
-        # Filter and select specific columns
-        selected_data = [[row[i] for i in selected_columns] for row in all_data]
-
-        return selected_data

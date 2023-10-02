@@ -87,10 +87,66 @@
         td {
             background-color: #f2f2f2;
         }
+        .import-button {
+            background-color: #333;
+            color: #fff; 
+            border: none;
+            border-radius: 5px; 
+            padding: 10px 20px; 
+            font-size: 16px; 
+            cursor: pointer;
+            transition: background-color 0.3s ease; 
+            
+            align-items: center;
+            text-align: center;
+        }
+
+        .import-button:hover {
+            background-color: #0056b3; /* Darker blue color on hover */
+        }
+        #popup {
+    z-index: 9999;
+    /* Other styles... */
+}
+#loading-icon-container {
+    display: flex;
+    justify-content: center; 
+    align-items: center; 
+    background-color: rgba(255, 255, 255, 0.7); 
+    position: fixed; 
+    top: 50%;
+    left: 50%;
+    z-index: 9999; 
+}
+.mask-layer {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent black background */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999; /* Ensure it's above other elements */
+}
+
     </style>
 </head>
 <body>
+    <div class="mask-layer" id="loading-mask-layer"></div>
+    <div id="loading-icon-container" style="display: none;">
+        <img src="/static/loading.gif" alt="Loading..." id="loading-icon" />
+    </div>
+    </div>
     <div class="left-section">
+        <!-- Popup with generated link -->
+        <div id="popup" style="display: none;">
+            <p>Generated Link:</p>
+            <input type="text" id="generated-link" readonly />
+            <button id="copy-link-button">Copy Link</button>
+            <a id="open-link-button" href="#" target="_blank">Open Link</a>
+        </div>
         <h1>Column Names</h1>
         <select id="available-columns">
             {% for column in columns %}
@@ -99,7 +155,7 @@
         </select>
         <button id="add-column-button">Add Column</button>
         <button id="add-remove-all-columns-button">Add All Columns</button>
-        <button id="import-to-google-sheets-button">Import to Google Sheets</button>
+        <button id="import-to-google-sheets-button">Instant Import</button>
         <div class="selected-columns" id="selected-columns-list"></div>
         <h1>Filter Column</h1>
         <select id="filter-columns">
@@ -122,6 +178,96 @@
             <!-- Filters will be displayed here -->
         </div>
         <button id="apply-filter-button">Apply Filters</button>
+        <!-- Loading icon -->
+
+        <div class="container mt-5">
+            <div class="row">
+                <div class="col-md-6">
+                    <!-- Get Sheet Name -->
+                    <h4>Get Workbook Name</h4>
+                    <div class="mb-3">
+                        <label for="workbook-name" class="form-label">Workbook Name:</label>
+                        <input type="text" class="form-control" id="workbook-name" placeholder="Enter workbook name">
+                    </div>
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="workbook-option" id="create-new-workbook" value="create-new" checked>
+                            <label class="form-check-label" for="create-new-workbook">Create New Workbook</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="workbook-option" id="open-existing-workbook" value="open-existing">
+                            <label class="form-check-label" for="open-existing-workbook">Open Existing Workbook</label>
+                        </div>
+                    </div>
+                    <!-- Use Existing Sheet or Create New Sheet -->
+                    <h4>Use Existing Sheet or Create New Sheet</h4>
+                    <div class="mb-3">
+                        <label for="sheet-name" class="form-label">Sheet Name:</label>
+                        <input type="text" class="form-control" id="sheet-name" placeholder="Enter sheet name">
+                    </div>
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="sheet-option" id="create-new-sheet" value="create-new" checked>
+                            <label class="form-check-label" for="create-new-sheet">Create New Sheet</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="sheet-option" id="use-existing-sheet" value="use-existing">
+                            <label class="form-check-label" for="use-existing-sheet">Use Existing Sheet</label>
+                        </div>
+                        
+                    </div>
+                </div>
+                
+                <div class="col-md-6 d-flex justify-content-center align-items-center">
+                    <!-- Import to Google Sheets Button -->
+                    <button class="import-button" id="import-names-to-google-sheets-button">Import to Google Sheets</button>
+                </div>
+                
+                <div class="col-md-6">
+                    <!-- Email Access Card -->
+                    <div class="card mb-3">
+                        <div class="card-header">
+                            <h4>Email Access</h4>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label for="access-level" class="form-label">Access Level:</label>
+                                <select class="form-select" id="access-level">
+                                    <option value="read">Read</option>
+                                    <option value="write">Write</option>
+                                    <option value="comment">Comment</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <input type="email" class="form-control" id="email" placeholder="Enter email">
+                                <button class="btn btn-success mb-3" id="grant-email-access-button">Grant Email Access</button>
+                            </div>
+                            
+                        </div>
+                    </div>
+                    
+                    <!-- Generate Sharable Link Card -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h4>Generate Sharable Link</h4>
+                        </div>
+                        <div class="card-body">
+                            
+                            <div class="mb-3">
+                                <label for="access-options" class="form-label">Access Options:</label>
+                                <select class="form-select" id="access-options">
+                                    <option value="view">View</option>
+                                    <option value="edit">Edit</option>
+                                    <option value="comment">Comment</option>
+                                </select>
+                            </div>
+                            <button class="btn btn-primary mb-3" id="generate-link-button">Generate Sharable Link</button>
+                        </div>
+                    </div>
+                </div>
+                
+            </div>
+        </div>
     </div>
 
     <div class="right-section">
@@ -154,6 +300,20 @@
     </div>
 
     <script>
+        const loadingIconContainer = document.getElementById("loading-icon-container");
+        const loadingMaskLayer = document.getElementById("loading-mask-layer");
+        function showLoadingMask() {
+            loadingIconContainer.style.display = "block";
+            loadingMaskLayer.style.display = "block";
+        }
+
+        function hideLoadingMask() {
+            loadingIconContainer.style.display = "none";
+            loadingMaskLayer.style.display = "none";
+        }
+
+
+        hideLoadingMask()
         const removeAllFiltersButton = document.getElementById("remove-all-filters-button");
         const filterTypeSelect = document.getElementById("filter-type");
         const filterValueInput = document.getElementById("filter-value");
@@ -171,10 +331,190 @@
         const csvTable = document.getElementById("csv-table");
         const headerRow = document.getElementById("header-row");
         let allColumnsAdded = false;
+        
         document.addEventListener("DOMContentLoaded", function() {
         const addRemoveAllColumnsButton = document.getElementById("add-remove-all-columns-button");
         addRemoveAllColumnsButton.click(); // Simulate a click on the button
     });
+    function isValidEmail(email) {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+}
+
+
+    document.addEventListener("DOMContentLoaded", function () {
+    const importnamesToGoogleSheetsButton = document.getElementById("import-names-to-google-sheets-button");
+    const generatelinkbutton = document.getElementById("generate-link-button");
+    const emailaccess=document.getElementById("grant-email-access-button");
+    const loadingIcon = document.getElementById("loading-icon-container");
+    const popup = document.getElementById("popup");
+    const generatedLinkInput = document.getElementById("generated-link");
+    const copyLinkButton = document.getElementById("copy-link-button");
+    const openLinkButton = document.getElementById("open-link-button");
+
+    importnamesToGoogleSheetsButton.addEventListener("click", function () {
+        showLoadingMask()
+        popup.style.display = "none";
+        loadingIcon.style.display = "block";
+        
+
+        const workbookName = document.getElementById("workbook-name").value;
+        const workbookOption = document.querySelector('input[name="workbook-option"]:checked').value;
+        const sheetName = document.getElementById("sheet-name").value;
+        const sheetOption = document.querySelector('input[name="sheet-option"]:checked').value;
+        const filename = "{{ filename }}";
+        const selectedColumns = Array.from(selectedColumnsList.querySelectorAll(".selected-column"), selectedColumn => {
+            return selectedColumn.getAttribute("data-column");
+        });
+
+        // Create an object with the data to send to the backend
+        const dataToSend = {
+            workbookName,
+            workbookOption,
+            sheetName,
+            sheetOption,
+            filename,
+            selectedColumns,
+        };
+
+        // Send a POST request to the backend route
+        fetch("/workbook-sheet-route", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(dataToSend),
+        })
+            .then((response) => {
+                if (response.ok) {
+                    return response
+                } else {
+                    throw new Error("Network response was not ok");
+                }
+            })
+            .then((data) => {
+                hideLoadingMask();
+                const redirectUrl = data.url; 
+                
+            
+                loadingIcon.style.display = "none";
+
+                // Display the popup with the generated link
+                popup.style.display = "block";
+                generatedLinkInput.value = redirectUrl;
+
+                // Copy link functionality
+                copyLinkButton.addEventListener("click", function () {
+                    generatedLinkInput.select();
+                    document.execCommand("copy");
+                });
+
+                // Set the "Open Link" button's href attribute
+                openLinkButton.href = redirectUrl;
+            })
+            .catch((error) => {
+                // Handle network or other errors here
+                console.error("Error:", error);
+
+                // Hide the loading icon and show an error message if needed
+                loadingIcon.style.display = "none";
+            });
+    });
+
+emailaccess.addEventListener("click", function () {
+    showLoadingMask();
+    popup.style.display = "none";    
+    loadingIcon.style.display = "block";
+
+    const accessLevelSelect = document.getElementById("access-level");
+    const selectedAccessLevel = accessLevelSelect.value;
+    const emailInput = document.getElementById("email");
+    const email = emailInput.value;
+    if (!isValidEmail(email)) {
+        alert("Invalid email address. Please enter a valid email.");
+        return;
+    }
+    fetch('/grant_email_access', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            email: email,
+            accessLevel: selectedAccessLevel,
+        }),
+    })
+    .then(response => {
+        hideLoadingMask();
+        loadingIcon.style.display = "none";
+
+        // Display the popup with the generated link
+        popup.style.display = "block";
+        if (response.ok) {
+            alert(`Access granted to ${email} with ${selectedAccessLevel} level.`);
+        } else {
+            alert('Error granting access.');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error granting access.');
+    });
+
+})
+
+generatelinkbutton.addEventListener("click", function () {
+        showLoadingMask();
+        // Get the selected access option
+        popup.style.display = "none";
+
+        // Show the loading icon while the request is being processed
+        loadingIcon.style.display = "block";
+        const accessOptions = document.getElementById("access-options").value;
+
+        // Make an AJAX request to your Flask route
+        fetch('/generate_sharable_link', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                access_options: accessOptions,
+            }),
+        })
+        .then((response) => {
+                if (response.ok) {
+                    return response
+                } else {
+                    throw new Error("Network response was not ok");
+                }
+            })
+            .then((data) => {
+                
+                console.log(data)
+                const redirectUrl = data.url; 
+                
+                hideLoadingMask();
+                loadingIcon.style.display = "none";
+
+                // Display the popup with the generated link
+                popup.style.display = "block";
+                generatedLinkInput.value = redirectUrl;
+
+                // Copy link functionality
+                copyLinkButton.addEventListener("click", function () {
+                    generatedLinkInput.select();
+                    document.execCommand("copy");
+                });
+
+                openLinkButton.href = redirectUrl;
+        })
+        .catch(error => {
+            console.error('Error generating sharable link:', error);
+        });
+    })
+})
+
 
     addFilterButton.addEventListener("click", () => {
     const filterType = filterTypeSelect.value;
@@ -394,5 +734,9 @@ function updateTableWithFilteredData() {
 });
 
     </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.5.0/dist/js/bootstrap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
+    
+
 </body>
 </html>
