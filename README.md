@@ -64,37 +64,75 @@ Feel free to check the discussions tab, you might get something of help there. C
 ## Developer's Section
 https://github.com/StackItHQ/stackit-hiring-assignment-nithesh10/assets/83530216/2ebaa42e-5e58-4249-87a3-94bfe4069283
 
-1.Setup Flask Project
+### Roadmap
+
+1. **Setup Flask Project**
+    ```
     csv_importer/
-        ├── app/
-        │   ├── __init__.py
-        │   ├── routes.py
-        │   └── templates/
-        │       ├── base.html
-        │       └── upload.html
-        ├── venv/
-        ├── config.py
-        ├── run.py
-        └── README.md
+    ├── app/
+    │   ├── __init__.py
+    │   ├── routes.py
+    │   └── templates/
+    │       ├── base.html
+    │       └── upload.html
+    ├── venv/
+    ├── config.py
+    ├── run.py
+    └── README.md
+    ```
 
-2.Google Sheets API
-    Set up Google Cloud project.
-    Enable Google Sheets API.
-    Generate OAuth 2.0 credentials.
-3.Backend
-    Implement file upload route.
-    Parse uploaded CSV files.
-    Allow column selection and data filtering.
-    Integrate with Google Sheets API.
-4.Frontend
-    Create a user-friendly interface.
-    Implement drag-and-drop file uploads.
-    Create UI for column selection and filtering.
+2. **Google Sheets API**
+    - Set up Google Cloud project.
+    - Enable Google Sheets API.
+    - Generate OAuth 2.0 credentials.
 
-5.Production Checklist
-    Optimize for large CSV files ✔️
-    Test with different file sizes✔️
-    Ensure column selection and filtering work. ✔️
-    Documentation ✔️
-    Video Recording ✔️
+3. **Backend**
+    - Implement file upload route.
+    - Parse uploaded CSV files.
+    - Allow column selection and data filtering.
+    - Integrate with Google Sheets API.
 
+4. **Frontend**
+    - Create a user-friendly interface.
+    - Implement drag-and-drop file uploads.
+    - Create UI for column selection and filtering.
+
+5. **Production Checklist**
+    - Optimize for large CSV files ✔️
+    - Test with different file sizes ✔️
+    - Ensure column selection and filtering work ✔️
+    - Documentation ✔️
+    - Video Recording ✔️
+
+### Approach
+
+**Technology Stack:** I chose to build this project using Flask, a lightweight and flexible web framework for Python. Additionally, I used HTML, CSS, and JavaScript for the frontend to create a user-friendly interface.
+
+**Design Decisions:**
+- **User Interface:** I designed a simple and intuitive user interface using HTML and CSS. Users can drag and drop CSV files onto the web application, making it easy and familiar for them.
+- **Backend Processing:** When a user drops a CSV file, the Flask backend handles file upload, validates the CSV, and presents the user with options to select columns for import. I designed this flow to be step-by-step and user-friendly.
+- **CSV Import to Google Sheets:** To import data into Google Sheets, I used the Google Sheets API, and I provided users with the option to either append data to an existing sheet or create a new one.
+- **Error Handling:** I implemented robust error handling to provide clear feedback to users in case of issues such as invalid CSV files or API errors.
+
+**Challenges:**
+- **Performance:** Optimizing the application to handle large CSV files without causing performance issues was a concern. I implemented efficient data processing to mitigate this.
+
+**Features:**
+- **Drag-and-Drop:** Users can easily upload CSV files by dragging and dropping them onto the web application.
+- **Column Mapping:** Users have the option to map CSV columns to Google Sheets columns, ensuring flexibility in data import.
+- **Data Filtering (Brownie Points):** I added a feature that allows users to filter data before importing it into Google Sheets. This can help streamline the import process and reduce unnecessary data.
+
+**Testing:** I thoroughly tested the application to ensure its functionality and reliability. Test cases included:
+- Uploading valid and invalid CSV files.
+- Testing various column mapping scenarios.
+- Importing data into existing and new Google Sheets.
+- Performance testing with large CSV files to ensure the application remains responsive.
+
+**Final Thoughts:** Building this CSV Importer for Google Sheets using Flask was a rewarding experience. It addresses a practical problem faced by data analysts and offers a user-friendly solution. I enjoyed the challenge of integrating with the Google Sheets API and ensuring the application's reliability and performance. This project has reinforced my skills in web development, API integration, and user interface design.
+
+### Checklist
+- [x] My code's working just fine! 🥳
+- [x] I have recorded a video showing it working and embedded it in the README ▶️
+- [x] I have tested all the normal working cases 😎
+- [x] I have even solved some edge cases (brownie points) 💪
+- [x] I added my very planned-out approach to the problem at the end of this README 📜
