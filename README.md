@@ -48,14 +48,53 @@ Once you're done, make sure you **record a video** showing your project working.
 
 We have a checklist at the bottom of this README file, which you should update as your progress with your assignment. It will help us evaluate your project.
 
-- [ ] My code's working just fine! 🥳
-- [ ] I have recorded a video showing it working and embedded it in the README ▶️
-- [ ] I have tested all the normal working cases 😎
-- [ ] I have even solved some edge cases (brownie points) 💪
-- [ ] I added my very planned-out approach to the problem at the end of this README 📜
+- [ ✔️] My code's working just fine! 🥳
+- [✔️ ] I have recorded a video showing it working and embedded it in the README ▶️
+- [✔️ ] I have tested all the normal working cases 😎
+- [✔️ ] I have even solved some edge cases (brownie points) 💪
+- [✔️ ] I added my very planned-out approach to the problem at the end of this README 📜
 
 ## Got Questions❓
+
+
+
+
 Feel free to check the discussions tab, you might get something of help there. Check out that tab before reaching out to us. Also, did you know, the internet is a great place to explore 😛
 
 ## Developer's Section
-*Add your video here, and your approach to the problem (optional). Leave some comments for us here if you want, we will be reading this :)*
+https://github.com/StackItHQ/stackit-hiring-assignment-nithesh10/assets/83530216/2ebaa42e-5e58-4249-87a3-94bfe4069283
+
+1.Setup Flask Project
+    csv_importer/
+        ├── app/
+        │   ├── __init__.py
+        │   ├── routes.py
+        │   └── templates/
+        │       ├── base.html
+        │       └── upload.html
+        ├── venv/
+        ├── config.py
+        ├── run.py
+        └── README.md
+
+2.Google Sheets API
+    Set up Google Cloud project.
+    Enable Google Sheets API.
+    Generate OAuth 2.0 credentials.
+3.Backend
+    Implement file upload route.
+    Parse uploaded CSV files.
+    Allow column selection and data filtering.
+    Integrate with Google Sheets API.
+4.Frontend
+    Create a user-friendly interface.
+    Implement drag-and-drop file uploads.
+    Create UI for column selection and filtering.
+
+5.Production Checklist
+    Optimize for large CSV files ✔️
+    Test with different file sizes✔️
+    Ensure column selection and filtering work. ✔️
+    Documentation ✔️
+    Video Recording ✔️
+
